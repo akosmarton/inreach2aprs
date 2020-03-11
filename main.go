@@ -52,16 +52,15 @@ func main() {
 	for {
 		time.Sleep(time.Second * (time.Duration)(interval))
 		d2 = time.Now().UTC()
-		resp, err := http.DefaultClient.Get(fmt.Sprintf("https://share.garmin.com/feed/Share/%s?d1=%s&d2=%s", mapshare, d1.Format("2006-01-02T15:04:05Z"), d2.Format("2006-01-02T15:04:05Z")))
-		d1 = d2
-
+		url := fmt.Sprintf("https://share.garmin.com/feed/Share/%s?d1=%s&d2=%s", mapshare, d1.Format("2006-01-02T15:04:05Z"), d2.Format("2006-01-02T15:04:05Z"))
+		resp, err := http.DefaultClient.Get(url)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
 		if resp.StatusCode < 200 || resp.StatusCode > 299 {
-			log.Println(resp.Status)
+			log.Println(resp.StatusCode, resp.Status)
 			continue
 		}
 
@@ -70,6 +69,9 @@ func main() {
 			log.Println(err)
 			continue
 		}
+
+		// Everything went well until this point so we can update the beginning timestamp
+		d1 = d2
 
 		im := InreachMessage{}
 		for _, pm := range k.Placemark {
