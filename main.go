@@ -72,9 +72,6 @@ func main() {
 
 		log.Printf("%s  %d  %d\n", url, resp.StatusCode, len(k.Placemark))
 
-		// Everything went well until this point so we can update the beginning timestamp
-		d1 = d2
-
 		im := InreachMessage{}
 		for _, pm := range k.Placemark {
 			if pm.Timestamp.IsZero() {
@@ -122,6 +119,9 @@ func main() {
 				if err := aprsClient.Send(ap); err != nil {
 					log.Println(err)
 					continue
+				}
+				if ap.Timestamp.After(d1) {
+					d1 = ap.Timestamp.Add(time.Second)
 				}
 				log.Printf("%s", string(ap.Encode()))
 			}
