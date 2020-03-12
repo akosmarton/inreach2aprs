@@ -58,7 +58,7 @@ func (p *AprsPacket) Encode() []byte {
 		b.WriteString("!")
 	} else {
 		b.WriteString("/")
-		b.WriteString(p.Timestamp.UTC().Format("150405h"))
+		b.WriteString(p.Timestamp.UTC().Format("021504z"))
 	}
 
 	if p.Latitude != 0 || p.Longitude != 0 {
