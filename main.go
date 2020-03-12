@@ -70,6 +70,8 @@ func main() {
 			continue
 		}
 
+		log.Printf("%s  %d  %d\n", url, resp.StatusCode, len(k.Placemark))
+
 		// Everything went well until this point so we can update the beginning timestamp
 		d1 = d2
 
@@ -117,11 +119,11 @@ func main() {
 					}
 					ap.Comment += "(" + im.DeviceType + ")"
 				}
-				log.Printf("%#v %s", im, string(ap.Encode()))
 				if err := aprsClient.Send(ap); err != nil {
 					log.Println(err)
 					continue
 				}
+				log.Printf("%s", string(ap.Encode()))
 			}
 		}
 	}
