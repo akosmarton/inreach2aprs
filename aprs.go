@@ -73,7 +73,7 @@ func (p *AprsPacket) Encode() []byte {
 		} else {
 			longDir = "W"
 		}
-		b.WriteString(fmt.Sprintf("%02.0f%02.2f%s/%03.0f%02.2f%s", math.Trunc(p.Latitude), (p.Latitude-math.Trunc(p.Latitude))*60, latDir, math.Trunc(p.Longitude), (p.Longitude-math.Trunc(p.Longitude))*60, longDir))
+		b.WriteString(fmt.Sprintf("%02.f%05.2f%s/%03.f%05.2f%s", math.Trunc(p.Latitude), (p.Latitude-math.Trunc(p.Latitude))*60, latDir, math.Trunc(p.Longitude), (p.Longitude-math.Trunc(p.Longitude))*60, longDir))
 	}
 
 	b.WriteString(p.Symbol)
