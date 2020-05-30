@@ -53,7 +53,16 @@ func main() {
 		time.Sleep(time.Second * (time.Duration)(interval))
 		d2 = time.Now().UTC()
 		url := fmt.Sprintf("https://share.garmin.com/feed/Share/%s?d1=%s&d2=%s", mapshare, d1.Format("2006-01-02T15:04:05Z"), d2.Format("2006-01-02T15:04:05Z"))
-		resp, err := http.DefaultClient.Get(url)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		if os.Getenv("MAPSHARE_PASSWORD") != "" {
+			req.SetBasicAuth("", os.Getenv("MAPSHARE_PASSWORD"))
+		}
+		log.Println(req.URL.RequestURI())
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -98,33 +107,47 @@ func main() {
 				}
 			}
 
+			callsign := os.Getenv("APRS_DEFAULT_CALLSIGN")
+			comment := os.Getenv("APRS_DEFAULT_COMMENT")
+			symbol := os.Getenv("APRS_DEFAULT_SYMBOL")
+
 			desc := strings.Split(im.Description, ":")
-			if len(desc) > 1 && desc[0] == "APRS" {
-				ap := &AprsPacket{
-					Callsign:  strings.ToUpper(desc[1]),
-					Latitude:  im.Latitude,
-					Longitude: im.Longitude,
-					Altitude:  int(im.Elevation * 3.281),
-					Course:    int(im.Course),
-					Speed:     int(im.Velocity / 1.852),
-					Timestamp: im.Timestamp.UTC(),
+			if desc[0] == "APRS" {
+				if len(desc) > 1 {
+					callsign = strings.ToUpper(desc[1])
 				}
 				if len(desc) > 2 {
-					ap.Symbol = desc[2]
-					if len(desc) > 3 {
-						ap.Comment = desc[3] + " "
-					}
-					ap.Comment += "(" + im.DeviceType + ")"
+					symbol = desc[2]
 				}
-				if err := aprsClient.Send(ap); err != nil {
-					log.Println(err)
-					continue
+				if len(desc) > 3 {
+					comment = desc[3] + " "
 				}
-				if ap.Timestamp.After(d1) {
-					d1 = ap.Timestamp.Add(time.Second)
-				}
-				log.Printf("%s", string(ap.Encode()))
 			}
+			if im.DeviceType != "" {
+				comment += " (" + im.DeviceType + ")"
+			}
+
+			ap := &AprsPacket{
+				Callsign:  callsign,
+				Latitude:  im.Latitude,
+				Longitude: im.Longitude,
+				Altitude:  int(im.Elevation * 3.281),
+				Course:    int(im.Course),
+				Speed:     int(im.Velocity / 1.852),
+				Timestamp: im.Timestamp.UTC(),
+				Comment:   comment,
+				Symbol:    symbol,
+			}
+
+			if err := aprsClient.Send(ap); err != nil {
+				log.Println(err)
+				continue
+			}
+			if ap.Timestamp.After(d1) {
+				d1 = ap.Timestamp.Add(time.Second)
+			}
+			log.Printf("%s", string(ap.Encode()))
+
 		}
 	}
 }
